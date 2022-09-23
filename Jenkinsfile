@@ -31,15 +31,7 @@ pipeline {
           dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
         }
       }
-    }
-    stage('Test image') {
-  
-
-        app.inside {
-            sh 'echo "Tests passed"'
-        }
-    }
-   
+    } 
     // Uploading Docker images into AWS ECR
     stage('Pushing to ECR') {
      steps{  
