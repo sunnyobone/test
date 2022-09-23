@@ -3,7 +3,7 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID="935537832940"
         AWS_DEFAULT_REGION="us-west-2" 
-        IMAGE_REPO_NAME="testpipeline"
+        IMAGE_REPO_NAME="testpipeline1"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
     }
@@ -20,8 +20,9 @@ pipeline {
         }
         
         stage('Cloning Git') {
-            
-            checkout scm
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/sd031/aws_codebuild_codedeploy_nodeJs_demo.git']]])     
+            }
         }
   
     // Building Docker images
@@ -31,7 +32,8 @@ pipeline {
           dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
         }
       }
-    } 
+    }
+   
     // Uploading Docker images into AWS ECR
     stage('Pushing to ECR') {
      steps{  
@@ -41,8 +43,9 @@ pipeline {
          }
         }
       }
-    stage('Trigger ManifestUpdate') {
-            echo "triggering updatemanifestjob"
-            build job: 'updatemanifest', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]
+      stage('Trigger ManifestUpdate') {
+                echo "triggering updatemanifestjob"
+                build job: 'updatemanifest', parameters: [string(name: 'DOCKERTAG', value: ${IMAGE_TAG})]
+        }
     }
 }
